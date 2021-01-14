@@ -1,6 +1,6 @@
 use clap::Clap;
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{stdin, BufRead, BufReader};
 
 #[derive(Clap, Debug)]
 #[clap(
@@ -19,21 +19,38 @@ struct Opts {
     formula_file: Option<String>,
 }
 
+struct RpnCalculator(bool);
+
+impl RpnCalculator {
+    pub fn new(verbose: bool) -> Self {
+        Self(verbose)
+    }
+
+    pub fn eval(&self, formula: &str) -> i32 {
+        0
+    }
+}
+
 fn main() {
     let opts = Opts::parse();
 
     if let Some(path) = opts.formula_file {
-        // Result.unwrap()
-        // Okなら中の値を返して、Errならpanicを返す
         let f = File::open(path).unwrap();
         let reader = BufReader::new(f);
-
-        for line in reader.lines() {
-            let line = line.unwrap();
-            println!("{}", line);
-        }
+        run(reader, opts.verbose);
     } else {
-        // ファイルを指定しなかった場合
-        println!("No file is specified.");
+        let stdin = stdin();
+        let reader = stdin.lock();
+        run(reader, opts.verbose);
+    }
+}
+
+fn run<R: BufRead>(reader: R, verbose: bool) {
+    let calc = RpnCalculator::new(verbose);
+
+    for line in reader.lines() {
+        let line = line.unwrap();
+        let answer = calc.eval(&line);
+        println!("{}", answer);
     }
 }
